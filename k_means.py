@@ -1,6 +1,7 @@
 import math
 import numpy
-from numpy.random import *
+import random
+#from numpy.random import *
 
 #点と点の距離を返す
 def distance(point1, point2):
@@ -16,13 +17,9 @@ def distance(point1, point2):
 
 #dotsの最初のkつをスタート点に定める
 def start_points(dots, k):
+    random.shuffle(list(set(dots)))
 
-    start_point_list = []
-
-    for i in range(k):
-        start_point_list.append(dots[i])
-
-    return start_point_list
+    return dots[:k]
 
 #与えられたlistの中心点を求める
 def center_of_list(input_list):
@@ -50,11 +47,15 @@ def group_by_points(dots, k, center_points):
 
     for dot in dots:
         distance_of_center_points = []
-        for center_point in center_points:
+
+        min_distance = 100000
+        for i, center_point in enumerate(center_points):
             distance_result = distance(center_point, dot)
-            distance_of_center_points.append(distance_result)
-        min_distance = min(distance_of_center_points)
-        clustering_group_index = distance_of_center_points.index(min_distance)
+
+            if distance_result < min_distance:
+                clustering_group_index = i
+                min_distance = distance_result
+
         groups[clustering_group_index].append(dot)
 
     return groups
@@ -76,16 +77,16 @@ def k_means(dots, k):
 
     #start状態
     start_point = start_points(dots, k)
-    start_group = group_by_points(dots, k, start_point)
-
-    #restart状態
-    restart_point = center_point_of_groups(start_group)
-    restart_group = group_by_points(dots, k, restart_point)
+    restart_group = group_by_points(dots, k, start_point)
+    restart_point = center_point_of_groups(restart_group)
 
     #whileで比較し、restart状態とstart状態で一致した場合にストップ
+    i = 0
     while start_point != restart_point:
         start_point = restart_point
+        restart_group = group_by_points(dots, k, restart_point)
         restart_point = center_point_of_groups(restart_group)
+
 
     final_center_points = restart_point
     final_clustering_group = group_by_points(dots, k, final_center_points)
